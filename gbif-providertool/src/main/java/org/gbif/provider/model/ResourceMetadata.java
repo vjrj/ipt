@@ -29,74 +29,86 @@ import javax.persistence.Lob;
  */
 @Embeddable
 public class ResourceMetadata {
-  protected String uddiID;
-  protected String link;
-  protected String title;
-  protected String description;
-  protected String contactName;
-  protected String contactEmail;
-  protected Point location;
+	protected String uddiID;
+	protected String link;
+	
+	/**
+	 * A description of the resource that is being documented that is long enough to 
+	 * differentiate it from other similar resource
+	 * @see http://knb.ecoinformatics.org/software/eml/eml-2.1.0/eml-resource.html#title
+	 */
+	protected String title;
+	
+	/**
+	 * A brief overview of the resource that is being documented 
+	 * @see http://knb.ecoinformatics.org/software/eml/eml-2.1.0/eml-resource.html#abstract
+	 */
+	protected String description;
+	
+	protected String contactName;
+	protected String contactEmail;
+	protected Point location;
 
-  @Column(length = 64)
-  public String getContactEmail() {
-    return contactEmail;
-  }
+	@Column(length = 64)
+	public String getContactEmail() {
+		return contactEmail;
+	}
 
-  @Column(length = 128)
-  public String getContactName() {
-    return contactName;
-  }
+	@Column(length = 128)
+	public String getContactName() {
+		return contactName;
+	}
 
-  @Lob
-  public String getDescription() {
-    return description;
-  }
+	@Lob
+	public String getDescription() {
+		return description;
+	}
 
-  public String getLink() {
-    return link;
-  }
+	public String getLink() {
+		return link;
+	}
 
-  public Point getLocation() {
-    return location;
-  }
+	public Point getLocation() {
+		return location;
+	}
 
-  @Column(length = 128)
-  @org.hibernate.annotations.Index(name = "title")
-  public String getTitle() {
-    return title;
-  }
+	@Column(length = 128)
+	@org.hibernate.annotations.Index(name = "title")
+	public String getTitle() {
+		return title;
+	}
 
-  @Column(length = 64, unique = true)
-  public String getUddiID() {
-    return uddiID;
-  }
+	@Column(length = 64, unique = true)
+	public String getUddiID() {
+		return uddiID;
+	}
 
-  public void setContactEmail(String contactEmail) {
-    this.contactEmail = StringUtils.trimToNull(contactEmail);
-  }
+	public void setContactEmail(String contactEmail) {
+		this.contactEmail = StringUtils.trimToNull(contactEmail);
+	}
 
-  public void setContactName(String contactName) {
-    this.contactName = StringUtils.trimToNull(contactName);
-  }
+	public void setContactName(String contactName) {
+		this.contactName = StringUtils.trimToNull(contactName);
+	}
 
-  public void setDescription(String description) {
-    this.description = description;
-  }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-  public void setLink(String link) {
-    this.link = StringUtils.trimToNull(link);
-  }
+	public void setLink(String link) {
+		this.link = StringUtils.trimToNull(link);
+	}
 
-  public void setLocation(Point location) {
-    this.location = location;
-  }
+	public void setLocation(Point location) {
+		this.location = location;
+	}
 
-  public void setTitle(String title) {
-    this.title = StringUtils.trimToNull(title);
-  }
+	public void setTitle(String title) {
+		this.title = StringUtils.trimToNull(title);
+	}
 
-  public void setUddiID(String uddiID) {
-    this.uddiID = StringUtils.trimToNull(uddiID);
-  }
+	public void setUddiID(String uddiID) {
+		this.uddiID = StringUtils.trimToNull(uddiID);
+	}
 
 }

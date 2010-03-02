@@ -16,7 +16,9 @@
 package org.gbif.provider.model;
 
 import org.gbif.provider.model.eml.Eml;
+import org.gbif.provider.model.eml.KeywordSet;
 import org.gbif.provider.model.eml.TaxonKeyword;
+import org.gbif.provider.model.eml.TaxonomicCoverage;
 import org.gbif.provider.model.hibernate.Timestampable;
 import org.gbif.provider.model.voc.PublicationStatus;
 import org.gbif.provider.model.voc.ServiceType;
@@ -335,14 +337,19 @@ public class Resource implements BaseObject, Comparable<Resource>,
   public void updateWithMetadata(Eml eml) {
     // keywords
     Set<String> keys = new HashSet<String>();
-    keys.addAll(eml.getKeywords());
-    for (TaxonKeyword k : eml.getTaxonomicClassification()) {
-      keys.add(k.getCommonName());
-      keys.add(k.getScientificName());
+    
+    for (KeywordSet kws : eml.getKeywords()) {
+    	keys.addAll(kws.getKeywords());
+    }
+    for (TaxonomicCoverage tc : eml.getTaxonomicCoverages()) {
+    	for (TaxonKeyword tk : tc.getKeywords()) {
+    		keys.add(tk.getCommonName());
+    		keys.add(tk.getScientificName());
+    	}
     }
     this.keywords = keys;
-    // geoCoverage
-    this.geoCoverage = eml.getGeographicCoverage().getBoundingCoordinates();
+    // geoCoverage - TODO... this is now jsut taking the first one
+    this.geoCoverage = eml.getGeospatialCoverages().get(0).getBoundingCoordinates();
   }
 
   /**

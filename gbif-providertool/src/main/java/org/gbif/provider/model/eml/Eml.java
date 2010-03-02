@@ -15,294 +15,574 @@
  */
 package org.gbif.provider.model.eml;
 
-import org.gbif.provider.model.Point;
-import org.gbif.provider.model.Resource;
-
-import com.google.common.collect.Sets;
-
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
+
+import org.gbif.provider.model.Resource;
+
+import com.google.common.collect.Lists;
 
 /**
- * TODO: Documentation.
+ * The EML model is a POJO representing the GBIF Extended Metadata Profile for
+ * the IPT 1.1 In addition to standard Bean encapsulation, additional methods
+ * exist to simplify the implementation of an EML XML parser.
  * 
+ * @see org.gbif.provider.model.eml.EmlFactory
  */
 public class Eml implements Serializable {
+	/**
+	 * Generated
+	 */
+	private static final long serialVersionUID = 770733523572837495L;
 
-  // New properties to support GBIF Extended Metadata Profile:
-  private String resourceAbstract;
-  private Set<String> citations = Sets.newHashSet();
-  private String collectionId;
-  private LocaleBundle dataLocale;
-  private Date dateStamp; // TODO: What does this date represent?
-  private String description;
-  private String formationPeriod;
-  private String hierarchyLevel;
-  private String homepage;
-  private Set<JgtiCuratorialUnit> jgtiCuratorialUnits = Sets.newHashSet();
-  private Set<String> kingdomCoverages = Sets.newHashSet();
-  private String livingTimePeriod;
-  private LocaleBundle resourceLocale;
-  private Point location;
-  private LocaleBundle metadataLocale;
-  private Set<Method> samplingMethods;
-  private String parentCollectionId;
-  private Set<PhysicalData> physicalData = Sets.newHashSet();
-  private String placenameCoverageDescription;
-  private Set<Agent> primaryContacts = Sets.newHashSet();
-  private Set<Project> projects = Sets.newHashSet();
-  private Set<Attribute> resourceAttributes = Sets.newHashSet();
-  private String specimenPreservationMethod;
-  private Set<TaxonomicCoverage> taxonomicCoverages = Sets.newHashSet();
-  private Set<GeoSpatialCoverage> geoSpatialCoverages = Sets.newHashSet();
-  private Set<TemporalCoverage> temporalCoverages = Sets.newHashSet();
-  private String title;
-  private String type;
+	/**
+	 * Serialised data
+	 */
+	private int emlVersion = 0;
 
-  // Proposed properties to deprecate in support of the GBIF Extended Metadata
-  // Profile:
+	/**
+	 * The IPT resource (note is transient)
+	 */
+	private transient Resource resource;
 
-  // Replace by geoSpatialCoverages:
-  private GeoSpatialCoverage geographicCoverage;
+	// Note that while Sets would be fine, to ease testing, Lists are
+	// used to preserve ordering. A Set implementation that respects ordering
+	// would also suffice
+	// please refer to typed classes for descriptions of the properties and how
+	// they
+	// map to EML
+	private List<KeywordSet> keywords = Lists.newArrayList();
+	private List<Method> samplingMethods = Lists.newArrayList();
+	private List<TaxonomicCoverage> taxonomicCoverages = Lists.newArrayList();
+	private List<GeospatialCoverage> geospatialCoverages = Lists.newArrayList();
+	private List<TemporalCoverage> temporalCoverages = Lists.newArrayList();
+	private List<PhysicalData> physicalData = Lists.newArrayList();
+	
+	/**
+	 * A resource that describes a literature citation that one might find in a
+	 * bibliography. We cannot use
+	 * http://knb.ecoinformatics.org/software/eml/eml-2.1.0/eml.html#citation
+	 * because the IPT deals with /eml/dataset and not /eml/citation therefore
+	 * these are found in the additionalMetadata section of the EML until a more
+	 * appropriate place is identified
+	 */
+	private List<String> citations = Lists.newArrayList();
 
-  // Replace by taxonomicCoverages:
-  private String taxonomicCoverageDescription;
+	/**
+	 * The 'creator' element provides the full name of the person, organization,
+	 * or position who created the resource.
+	 * 
+	 * @see http://knb.ecoinformatics.org/software/eml/eml-2.1.0/eml-resource.html#creator
+	 */
+	private Agent resourceCreator = new Agent();
 
-  // Replace by temporalCoverages:
-  private TimeKeyword temporalCoverage = new TimeKeyword();
+	/**
+	 * The 'metadataProvider' element provides the full name of the person,
+	 * organization, or position who created documentation for the resource.
+	 * 
+	 * @see http://knb.ecoinformatics.org/software/eml/eml-2.1.0/eml-resource.html#metadataProvider
+	 */
+	private Agent metadataProvider = new Agent();
 
-  // Replace by samplingMethods:
-  private String methods;
+	/**
+	 * The 'associatedParty' element provides the full name of other people,
+	 * organizations, or positions who should be associated with the resource.
+	 * These parties might play various roles in the creation or maintenance of
+	 * the resource, and these roles should be indicated in the "role" element.
+	 */
+	private List<Agent> associatedParties = Lists.newArrayList();
 
-  // Replace by projects:
-  private Project researchProject = new Project();
+	/**
+	 * A rights management statement for the resource, or reference a service
+	 * providing such information. Rights information encompasses Intellectual
+	 * Property Rights (IPR), Copyright, and various Property Rights. In the
+	 * case of a data set, rights might include requirements for use,
+	 * requirements for attribution, or other requirements the owner would like
+	 * to impose.
+	 * 
+	 * @see http://knb.ecoinformatics.org/software/eml/eml-2.1.0/eml-resource.html#intellectualRights
+	 */
+	private String intellectualRights;
 
-  // Properties unaffected by GBIF Extended Metadata Profile integration:
+	/**
+	 * The language in which the resource is written. This can be a well-known
+	 * language name, or one of the ISO language codes to be more precise.
+	 * 
+	 * @see http://knb.ecoinformatics.org/software/eml/eml-2.1.0/eml-resource.html#language
+	 *      The IPT will always use ISO language codes
+	 */
+	private String language = "en";
 
-  private static final long serialVersionUID = 770733523572837495L;
-  private transient Resource resource;
-  // serialised data
-  private int emlVersion = 0;
-  private Agent resourceCreator = new Agent();
-  private Date pubDate;
-  private String language = "en";
-  private String intellectualRights;
-  // keywords
-  private List<String> keywords = new ArrayList<String>();
-  private TaxonKeyword lowestCommonTaxon;// TODO: verify: = new TaxonKeyword();
-  private List<TaxonKeyword> taxonomicClassification = new ArrayList<TaxonKeyword>();
-  // methods
-  private String samplingDescription;
-  private String qualityControl;
-  // other
-  private String purpose;
-  private String maintenance;
+	/**
+	 * Language of the metadata composed of an ISO639-2/T three letter language
+	 * code and an ISO3166-1 three letter country code.
+	 */
+	private String metadataLanguage = "en";
 
-  public Eml() {
-    super();
-    this.pubDate = new Date();
-    this.resourceCreator.setRole(Role.ORIGINATOR);
-  }
+	/**
+	 * The date that the resource was published. The format should be
+	 * represented as: CCYY, which represents a 4 digit year, or as CCYY-MM-DD,
+	 * which denotes the full year, month, and day. Note that month and day are
+	 * optional components. Formats must conform to ISO 8601.
+	 * http://knb.ecoinformatics.org/software/eml/eml-2.1.0/eml-resource.html#pubDate
+	 */
+	private Date pubDate;
 
-  public void addKeyword(String keyword) {
-    this.keywords.add(keyword);
-  }
+	/**
+	 * Date of metadata creation or the last metadata update Default to now(),
+	 * but can be overridden
+	 */
+	private Date dateStamp = new Date();
 
-  public String getAbstract() {
-    return resource.getDescription();
-  }
+	/**
+	 * Dataset level to which the metadata applies. The default value for GBIF
+	 * is “dataset”
+	 * 
+	 * @see http://www.fgdc.gov/standards/projects/incits-l1-standards-projects/NAP-Metadata/napMetadataProfileV101.pdf
+	 */
+	private String hierarchyLevel = "dataset";
 
-  public int getEmlVersion() {
-    return emlVersion;
-  }
+	/**
+	 * The GBIF metadata profile states "Describes other languages used in
+	 * metadata free text description. Consists of language, country and
+	 * characterEncoding" In Java world, a LocaleBundle handles this concisely
+	 */
+	private LocaleBundle metadataLocale;
 
-  public GeoSpatialCoverage getGeographicCoverage() {
-    return geographicCoverage;
-  }
+	/**
+	 * Identifier for the parent collection for this sub-collection. Enables a
+	 * hierarchy of collections and sub collections to be built.
+	 * 
+	 * @see http://rs.tdwg.org/ontology/voc/Collection#isPartOfCollection
+	 */
+	private String parentCollectionId;
 
-  public String getGuid() {
-    return resource.getGuid();
-  }
+	/**
+	 * Official name of the Collection in the local language.
+	 * 
+	 * @see http://purl.org/dc/elements/1.1/title 
+	 * Note: this could potentially
+	 * be sourced from the resource title, but this is declared explicitly
+	 * in the GBIF IPT metadata profile, so must assume that this is
+	 * required for a title in a different language, presumably to aid free
+	 * text discovery in original language
+	 */
+	private String collectionName;
 
-  public String getIntellectualRights() {
-    return intellectualRights;
-  }
+	/**
+	 * The URI (LSID or URL) of the collection. In RDF, used as URI of the
+	 * collection resource.
+	 * 
+	 * @see http://rs.tdwg.org/ontology/voc/Collection#collectionId
+	 */
+	private String collectionId;
 
-  public List<String> getKeywords() {
-    return keywords;
-  }
+	/**
+	 * Picklist keyword indicating the process or technique used to prevent
+	 * physical deterioration of non-living collections. Expected to contain an
+	 * instance from the Specimen Preservation Method Type Term vocabulary.
+	 * 
+	 * @see http://rs.tdwg.org/ontology/voc/Collection#specimenPreservationMethod
+	 */
+	private String specimenPreservationMethod;
 
-  public String getLanguage() {
-    return language;
-  }
+	/**
+	 * A quantitative descriptor (number of specimens, samples or batches). The
+	 * actual quantification could be covered by 1) an exact number of
+	 * “JGI-units” in the collection plus a measure of uncertainty (+/- x); 2) a
+	 * range of numbers (x to x), with the lower value representing an exact
+	 * number, when the higher value is omitted.
+	 */
+	private JGTICuratorialUnit jgtiCuratorialUnit;
 
-  public String getLink() {
-    return resource.getLink();
-  }
+	/**
+	 * This is not in the GBIF extended metadata document, but seems like a sensible placeholder
+	 * that can be used to capture anything missing, and maps nicely in EML, therefore is added
+	 */
+	private String additionalInfo;
+	
+	/**
+	 * This is not in the GBIF extended metadata document, but seems like a sensible field to maintain, 
+	 * and maps nicely in EML, therefore is added
+	 */
+	private String purpose;
+	
+	/**
+	 * The project this resource is associated with
+	 */
+	private Project project;
+	
+	// private LocaleBundle dataLocale;
+	// private String description;
+	// private String formationPeriod;
+	// private String homepage;
+	// private String distributionUrl;
+	// private Set<String> kingdomCoverages = Sets.newHashSet();
+	// private String livingTimePeriod;
+	// private LocaleBundle resourceLocale;
+	// private Point location;
+	// private String placenameCoverageDescription;
+	// private List<Agent> primaryContacts = Lists.newArrayList();
+	// private Set<Attribute> resourceAttributes = Sets.newHashSet();
+	// private String type;
+	// private String publishPlace;
+	// private GeospatialCoverage geographicCoverage;
+	// private String taxonomicCoverageDescription;
+	// private TimeKeyword temporalCoverage = new TimeKeyword();
+	// private String methods;
+	// private Project researchProject = new Project();
+	// private TaxonKeyword lowestCommonTaxon;// TODO: verify: = new
+	// TaxonKeyword();
+	// private List<TaxonKeyword> taxonomicClassification = new
+	// ArrayList<TaxonKeyword>();
+	// private String samplingDescription;
+	// private String qualityControl;
+	// private String purpose;
+	// private String maintenance;
+	
+	/**
+	 * Default constructor needed by Struts2
+	 */
+	public Eml() {
+		super();
+		this.pubDate = new Date();
+		this.resourceCreator.setRole(Role.ORIGINATOR);
+		this.metadataProvider.setRole(Role.METADATA_PROVIDER);
+	}
 
-  public TaxonKeyword getLowestCommonTaxon() {
-    return lowestCommonTaxon;
-  }
+	public int increaseEmlVersion() {
+		this.emlVersion += 1;
+		return this.emlVersion;
+	}
+	
+	public String getAbstract() {
+		return resource.getDescription();
+	}
 
-  public String getMaintenance() {
-    return maintenance;
-  }
+	public void setAbstract(String description) {
+		resource.setDescription(description);
+	}
 
-  // regular getter/setter
+	public int getEmlVersion() {
+		return emlVersion;
+	}
 
-  public String getMethods() {
-    return methods;
-  }
+	public String getGuid() {
+		return resource.getGuid();
+	}
 
-  public Date getPubDate() {
-    return pubDate;
-  }
+	public void setGuid(String guid) {
+		resource.setGuid(guid);
+	}
 
-  public String getPurpose() {
-    return purpose;
-  }
+	public String getLink() {
+		return resource.getLink();
+	}
 
-  public String getQualityControl() {
-    return qualityControl;
-  }
+	public Date getPubDate() {
+		return pubDate;
+	}
 
-  public Project getResearchProject() {
-    return researchProject;
-  }
+	public Resource getResource() {
+		return resource;
+	}
 
-  public Resource getResource() {
-    return resource;
-  }
+	public Agent getResourceCreator() {
+		return resourceCreator;
+	}
 
-  public Agent getResourceCreator() {
-    return resourceCreator;
-  }
+	public String getTitle() {
+		return resource.getTitle();
+	}
 
-  public String getSamplingDescription() {
-    return samplingDescription;
-  }
+	public Agent resourceCreator() {
+		return resourceCreator;
+	}
 
-  public List<TaxonKeyword> getTaxonomicClassification() {
-    return taxonomicClassification;
-  }
+	public void setEmlVersion(int emlVersion) {
+		this.emlVersion = emlVersion;
+	}
 
-  public String getTaxonomicCoverageDescription() {
-    return taxonomicCoverageDescription;
-  }
+	public void setIntellectualRights(String intellectualRights) {
+		this.intellectualRights = intellectualRights;
+	}
 
-  public TimeKeyword getTemporalCoverage() {
-    return temporalCoverage;
-  }
+	public void setKeywordSet(List<KeywordSet> keywords) {
+		this.keywords = keywords;
+	}
 
-  public String getTitle() {
-    return resource.getTitle();
-  }
+	public void setLanguage(String language) {
+		this.language = language;
+	}
 
-  public int increaseEmlVersion() {
-    this.emlVersion += 1;
-    return this.emlVersion;
-  }
+	public void setLink(String link) {
+		resource.setLink(link);
+	}
 
-  public TaxonKeyword lowestCommonTaxon() {
-    return lowestCommonTaxon;
-  }
+	public void setPubDate(Date pubDate) {
+		this.pubDate = pubDate;
+	}
 
-  // cant replace instance, just modify their properties
-  public Agent resourceCreator() {
-    return resourceCreator;
-  }
+	public void setResource(Resource resource) {
+		this.resource = resource;
+	}
 
-  public void setAbstract(String text) {
-    resource.setDescription(text);
-  }
+	public void setResourceCreator(Agent resourceCreator) {
+		this.resourceCreator = resourceCreator;
+	}
 
-  public void setEmlVersion(int emlVersion) {
-    this.emlVersion = emlVersion;
-  }
+	public void setTitle(String title) {
+		resource.setTitle(title);
+	}
 
-  public void setGeographicCoverage(GeoSpatialCoverage geographicCoverage) {
-    this.geographicCoverage = geographicCoverage;
-  }
+	/**
+	 * utility to add Agents to the primary contacts This method was introduced
+	 * to ease the Digester rules for parsing of EML
+	 * 
+	 * @param agent To add
+	 */
+	public void addAssociatedParty(Agent agent) {
+		agent.setRole(Role.ASSOCIATED_PARTY);
+		associatedParties.add(agent);
+	}
 
-  public void setIntellectualRights(String intellectualRights) {
-    this.intellectualRights = intellectualRights;
-  }
+	/**
+	 * utility to add keywords to the keyword sets This method was introduced to
+	 * ease the Digester rules for parsing of EML
+	 * 
+	 * @param agent To add
+	 */
+	public void addKeywordSet(KeywordSet keywordSet) {
+		keywords.add(keywordSet);
+	}
 
-  public void setKeywords(List<String> keywords) {
-    this.keywords = keywords;
-  }
+	/**
+	 * utility to add a coverage to the coverages This method was introduced to
+	 * ease the Digester rules for parsing of EML
+	 * 
+	 * @param coverage To add
+	 */
+	public void addGeospatialCoverage(GeospatialCoverage geospatialCoverage) {
+		geospatialCoverages.add(geospatialCoverage);
+	}
 
-  public void setLanguage(String language) {
-    this.language = language;
-  }
+	/**
+	 * utility to add a coverage to the coverages This method was introduced to
+	 * ease the Digester rules for parsing of EML
+	 * 
+	 * @param coverage To add
+	 */
+	public void addTemporalCoverage(TemporalCoverage coverage) {
+		temporalCoverages.add(coverage);
+	}
 
-  public void setLink(String link) {
-    resource.setLink(link);
-  }
+	/**
+	 * utility to add a coverage to the coverages This method was introduced to
+	 * ease the Digester rules for parsing of EML
+	 * 
+	 * @param coverage To add
+	 */
+	public void addTaxonomicCoverage(TaxonomicCoverage coverage) {
+		taxonomicCoverages.add(coverage);
+	}
 
-  public void setLowestCommonTaxon(TaxonKeyword lowestCommonTaxon) {
-    this.lowestCommonTaxon = lowestCommonTaxon;
-  }
+	/**
+	 * Utility to set the date with a textual format The date that the resource
+	 * was published. The format should be represented as: CCYY, which
+	 * represents a 4 digit year, or as CCYY-MM-DD, which denotes the full year,
+	 * month, and day. Note that month and day are optional components. Formats
+	 * must conform to ISO 8601.
+	 * http://knb.ecoinformatics.org/software/eml/eml-2.1.0/eml-resource.html#pubDate
+	 * 
+	 * @param dateString To set
+	 * @throws ParseException Should it be an erroneous format
+	 */
+	public void setPubDate(String dateString) throws ParseException {
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			pubDate = sdf.parse(dateString);
+		} catch (ParseException e) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy");
+			pubDate = sdf.parse(dateString);
+		}
+	}
 
-  public void setMaintenance(String maintenance) {
-    this.maintenance = maintenance;
-  }
+	public List<GeospatialCoverage> getGeospatialCoverages() {
+		return geospatialCoverages;
+	}
 
-  public void setMethods(String methods) {
-    this.methods = methods;
-  }
+	public void setGeospatialCoverages(List<GeospatialCoverage> geospatialCoverages) {
+		this.geospatialCoverages = geospatialCoverages;
+	}
 
-  public void setPubDate(Date pubDate) {
-    this.pubDate = pubDate;
-  }
+	public List<TemporalCoverage> getTemporalCoverages() {
+		return temporalCoverages;
+	}
 
-  public void setPurpose(String purpose) {
-    this.purpose = purpose;
-  }
+	public void setTemporalCoverages(List<TemporalCoverage> temporalCoverages) {
+		this.temporalCoverages = temporalCoverages;
+	}
 
-  public void setQualityControl(String qualityControl) {
-    this.qualityControl = qualityControl;
-  }
+	public List<TaxonomicCoverage> getTaxonomicCoverages() {
+		return taxonomicCoverages;
+	}
 
-  public void setResearchProject(Project researchProject) {
-    this.researchProject = researchProject;
-  }
+	public void setTaxonomicCoverages(List<TaxonomicCoverage> taxonomicCoverages) {
+		this.taxonomicCoverages = taxonomicCoverages;
+	}
 
-  public void setResource(Resource resource) {
-    this.resource = resource;
-  }
+	public List<Method> getSamplingMethods() {
+		return samplingMethods;
+	}
 
-  public void setResourceCreator(Agent resourceCreator) {
-    this.resourceCreator = resourceCreator;
-  }
+	public void setSamplingMethods(List<Method> samplingMethods) {
+		this.samplingMethods = samplingMethods;
+	}
 
-  public void setSamplingDescription(String samplingDescription) {
-    this.samplingDescription = samplingDescription;
-  }
+	public Project getProject() {
+		return project;
+	}
 
-  public void setTaxonomicClassification(
-      List<TaxonKeyword> taxonomicClassification) {
-    this.taxonomicClassification = taxonomicClassification;
-  }
+	public void setProject(Project project) {
+		this.project = project;
+	}
 
-  public void setTaxonomicCoverageDescription(
-      String taxonomicCoverageDescription) {
-    this.taxonomicCoverageDescription = taxonomicCoverageDescription;
-  }
+	public List<KeywordSet> getKeywords() {
+		return keywords;
+	}
 
-  public void setTemporalCoverage(TimeKeyword temporalCoverage) {
-    this.temporalCoverage = temporalCoverage;
-  }
+	public void setKeywords(List<KeywordSet> keywords) {
+		this.keywords = keywords;
+	}
 
-  public void setTitle(String title) {
-    resource.setTitle(title);
-  }
+	public List<PhysicalData> getPhysicalData() {
+		return physicalData;
+	}
 
-  public TimeKeyword temporalCoverage() {
-    return temporalCoverage;
-  }
+	public void setPhysicalData(List<PhysicalData> physicalData) {
+		this.physicalData = physicalData;
+	}
 
+	public List<String> getCitations() {
+		return citations;
+	}
+
+	public void setCitations(List<String> citations) {
+		this.citations = citations;
+	}
+
+	public Agent getMetadataProvider() {
+		return metadataProvider;
+	}
+
+	public void setMetadataProvider(Agent metadataProvider) {
+		this.metadataProvider = metadataProvider;
+	}
+
+	public List<Agent> getAssociatedParties() {
+		return associatedParties;
+	}
+
+	public void setAssociatedParties(List<Agent> associatedParties) {
+		this.associatedParties = associatedParties;
+	}
+
+	public String getMetadataLanguage() {
+		return metadataLanguage;
+	}
+
+	public void setMetadataLanguage(String metadataLanguage) {
+		this.metadataLanguage = metadataLanguage;
+	}
+
+	public Date getDateStamp() {
+		return dateStamp;
+	}
+
+	public void setDateStamp(Date dateStamp) {
+		this.dateStamp = dateStamp;
+	}
+
+	public String getHierarchyLevel() {
+		return hierarchyLevel;
+	}
+
+	public void setHierarchyLevel(String hierarchyLevel) {
+		this.hierarchyLevel = hierarchyLevel;
+	}
+
+	public LocaleBundle getMetadataLocale() {
+		return metadataLocale;
+	}
+
+	public void setMetadataLocale(LocaleBundle metadataLocale) {
+		this.metadataLocale = metadataLocale;
+	}
+
+	public String getParentCollectionId() {
+		return parentCollectionId;
+	}
+
+	public void setParentCollectionId(String parentCollectionId) {
+		this.parentCollectionId = parentCollectionId;
+	}
+
+	public String getCollectionName() {
+		return collectionName;
+	}
+
+	public void setCollectionName(String collectionName) {
+		this.collectionName = collectionName;
+	}
+
+	public String getCollectionId() {
+		return collectionId;
+	}
+
+	public void setCollectionId(String collectionId) {
+		this.collectionId = collectionId;
+	}
+
+	public String getSpecimenPreservationMethod() {
+		return specimenPreservationMethod;
+	}
+
+	public void setSpecimenPreservationMethod(String specimenPreservationMethod) {
+		this.specimenPreservationMethod = specimenPreservationMethod;
+	}
+
+	public JGTICuratorialUnit getJgtiCuratorialUnit() {
+		return jgtiCuratorialUnit;
+	}
+
+	public void setJgtiCuratorialUnit(JGTICuratorialUnit jgtiCuratorialUnit) {
+		this.jgtiCuratorialUnit = jgtiCuratorialUnit;
+	}
+
+	public String getIntellectualRights() {
+		return intellectualRights;
+	}
+
+	public String getLanguage() {
+		return language;
+	}
+
+	public String getAdditionalInfo() {
+		return additionalInfo;
+	}
+
+	public void setAdditionalInfo(String additionalInfo) {
+		this.additionalInfo = additionalInfo;
+	}
+
+	public String getPurpose() {
+		return purpose;
+	}
+
+	public void setPurpose(String purpose) {
+		this.purpose = purpose;
+	}
 }

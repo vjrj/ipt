@@ -26,21 +26,21 @@ import java.util.Map;
 import org.junit.Test;
 
 /**
- * This class can be used for unit testing {@link JgtiCuratorialUnit}.
+ * This class can be used for unit testing {@link JGTICuratorialUnit}.
  * 
  */
 public class JgtiCuratorialUnitTest {
 
-  private static JgtiCuratorialUnit create(String rangeEnd, String rangeStart,
+  private static JGTICuratorialUnit create(String rangeEnd, String rangeStart,
       String uncertaintyMeasure, Integer unit) {
     return create(null, rangeEnd, rangeStart, uncertaintyMeasure, unit);
   }
 
-  private static JgtiCuratorialUnit create(String failMsg, String rangeEnd,
+  private static JGTICuratorialUnit create(String failMsg, String rangeEnd,
       String rangeStart, String uncertaintyMeasure, Integer unit) {
-    JgtiCuratorialUnit jcu = null;
+    JGTICuratorialUnit jcu = null;
     try {
-      jcu = JgtiCuratorialUnit.create(rangeStart, rangeEnd, uncertaintyMeasure,
+      jcu = JGTICuratorialUnit.create(rangeStart, rangeEnd, uncertaintyMeasure,
           unit);
       if (failMsg != null) {
         fail(failMsg);
@@ -102,9 +102,9 @@ public class JgtiCuratorialUnitTest {
 
   @Test
   public final void testHashCode() {
-    JgtiCuratorialUnit jcu = create("re", "rs", "um", 0);
+    JGTICuratorialUnit jcu = create("re", "rs", "um", 0);
     assertEquals(jcu.hashCode(), create("re", "rs", "um", 0).hashCode());
-    Map<JgtiCuratorialUnit, String> map = Maps.newHashMap();
+    Map<JGTICuratorialUnit, String> map = Maps.newHashMap();
     map.put(jcu, "foo");
     assertTrue(map.containsKey(create("re", "rs", "um", 0)));
   }

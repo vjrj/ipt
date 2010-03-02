@@ -54,7 +54,7 @@ public class BBox implements Serializable {
   private Point min;
 
   public BBox() {
-    super();
+    this(-90d, -180d, 90d, 180d);
   }
 
   public BBox(Double minY, Double minX, Double maxY, Double maxX) {
@@ -67,6 +67,59 @@ public class BBox implements Serializable {
     super();
     setMax(max);
     setMin(min);
+  }
+  
+  /**
+   * Sets the westing coordinate
+   */
+  public void setMaxX(String s) {
+	  Point p = getMax();
+	  try {
+		p.setX(Double.parseDouble(s));
+		setMax(p);
+	  } catch (NumberFormatException e) {
+		// not much can be done really, it is bad, so do not update
+		  e.printStackTrace();
+	  }
+  }
+
+  /**
+   * Sets the easting coordinate
+   */
+  public void setMinX(String s) {
+	  Point p = getMin();
+	  try {
+		p.setX(Double.parseDouble(s));
+		setMin(p);
+	  } catch (NumberFormatException e) {
+		// not much can be done really, it is bad, so do not update
+	  }
+  }
+
+  /**
+   * Sets the northing coordinate
+   */
+  public void setMaxY(String s) {
+	  Point p = getMax();
+	  try {
+		p.setY(Double.parseDouble(s));
+		setMax(p);
+	  } catch (NumberFormatException e) {
+		// not much can be done really, it is bad, so do not update
+	  }
+  }
+
+  /**
+   * Sets the southing coordinate
+   */
+  public void setMinY(String s) {
+	  Point p = getMin();
+	  try {
+		p.setY(Double.parseDouble(s));
+		setMin(p);
+	  } catch (NumberFormatException e) {
+		// not much can be done really, it is bad, so do not update
+	  }
   }
 
   /**
